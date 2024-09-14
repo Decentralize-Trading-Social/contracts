@@ -12,6 +12,8 @@ module social::social {
   use aptos_framework::block::{Self};
   use std::string::{Self, String};
   use std::option;
+  use std::vector::{Self};
+  use aptos_framework::smart_vector::{Self, SmartVector};
 
   const ASSET_NAME: vector<u8> = b"social";
   const ASSET_SYMBOL: vector<u8> = b"SOCIAL";
@@ -66,6 +68,15 @@ module social::social {
     admin: address,
   }
 
+  struct Post has store, copy {
+    post_content: String,
+    post_image: vector<String>,
+  }
+
+  struct UploadPosts has key {
+    posts: SmartVector<Post>,
+  }
+
   fun init_module(account_signer: &signer) {
     let protocol_fa_metadata_constructor_ref = object::create_named_object(account_signer, b"social");
     primary_fungible_store::create_primary_store_enabled_fungible_asset(
@@ -97,14 +108,14 @@ module social::social {
     });
   }
 
-  // Stake native token to the protocol to become a kol
-  entry public fun stake_native(account_signer: &signer, user_name: String, amount: u64, minimum_stake_config: u64) acquires ProtocolData, ProtocolConfig, ProtocolManagedFA {
+  // Stake native token to the protocol to become a kol, user_address must be full address
+  entry public fun stake_native(account_signer: &signer, user_address: String, amount: u64, minimum_stake_config: u64) acquires ProtocolData, ProtocolConfig, ProtocolManagedFA {
     let metadata_constructore_ref = object::create_named_object(account_signer, b"social");
     primary_fungible_store::create_primary_store_enabled_fungible_asset(
       &metadata_constructore_ref,
       option::none(),
-      user_name,
-      user_name,
+      user_address,
+      user_address,
       8,
       string::utf8(b"KOL"),
       string::utf8(b"KOL"),
@@ -230,6 +241,22 @@ module social::social {
     );
   }
 
+  entry public fun upload_post(account_signer: &signer, post_content: String, post_image: vector<String>) acquires UploadPosts {
+    if (!exists<UploadPosts>(signer::address_of(account_signer))) {
+      move_to(account_signer, UploadPosts {
+        posts: smart_vector::new<Post>(),
+      });
+    };
+    let data = borrow_global_mut<UploadPosts>(signer::address_of(account_signer));
+    smart_vector::push_back<Post>(
+      &mut data.posts,
+      Post {
+        post_content,
+        post_image,
+      },
+    );
+  }
+
   #[view]
   public fun get_protocol_stake_amount(account: address): u64 acquires ProtocolData {
     let data = borrow_global<ProtocolData>(@social);
@@ -253,6 +280,15 @@ module social::social {
     );
     info.stake_amount
   } 
+
+  #[view]
+  public fun get_user_posts(account: address): vector<Post> acquires UploadPosts {
+    if (!exists<UploadPosts>(account)) {
+      return vector::empty<Post>()
+    };
+    let data = borrow_global<UploadPosts>(account);
+    smart_vector::to_vector(&data.posts)
+  }
 
   #[test_only]
   public fun init_module_for_test(account_signer: &signer, user_account: address) acquires ProtocolManagedFA {
