@@ -33,4 +33,36 @@ module social::stake_test {
         assert!(social::is_following(user1_addr,user2_addr),101);
         assert!(social::is_followed(user2_addr,user1_addr),102);
     }
+
+    #[test(user1=@0xabc,user2 = @0x123)]
+    #[expected_failure]
+    fun test_already_followed(user1 : signer, user2 : signer) {
+        setup_test();
+        social::follow(&user1,signer::address_of(&user2));
+        let user1_addr = signer::address_of(&user1);
+        let user2_addr = signer::address_of(&user2);
+        social::follow(&user1,user2_addr);
+    }
+
+    #[test(user1=@0xabc,user2 = @0x123)]
+    #[expected_failure]
+    fun test_not_followed(user1 : signer, user2 : signer) {
+        setup_test();
+        let user1_addr = signer::address_of(&user1);
+        let user2_addr = signer::address_of(&user2);
+        social::unfollow(&user1,user2_addr);
+    }
+
+    #[test(user1=@0xabc,user2 = @0x123)]
+    fun test_unfollow_feat(user1 : signer, user2 : signer) {
+        setup_test();
+        let user1_addr = signer::address_of(&user1);
+        let user2_addr = signer::address_of(&user2);
+        assert!(!social::is_following(user1_addr,user2_addr),103);
+        assert!(!social::is_followed(user2_addr,user1_addr),104);
+        social::follow(&user1,signer::address_of(&user2));
+        social::unfollow(&user1,user2_addr);
+        assert!(!social::is_following(user1_addr,user2_addr),103);
+        assert!(!social::is_followed(user2_addr,user1_addr),104);
+    }
 }
