@@ -362,7 +362,6 @@ module social::social {
       post_image,
     };
     0x1::event::emit(event);
-
   }
 
   entry public fun follow(from : &signer, to : address) acquires FollowData {
@@ -387,8 +386,6 @@ module social::social {
       to,
     };
     0x1::event::emit(event);
-
-
   }
 
   entry public fun unfollow(from : &signer, to : address) acquires FollowData {
@@ -463,8 +460,6 @@ module social::social {
     };
     let following = smart_table::borrow(&data.following, account);
     smart_vector::contains(following, &person)
-
-
   }
 
   #[view]

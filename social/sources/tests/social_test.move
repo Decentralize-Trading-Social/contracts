@@ -42,8 +42,6 @@ module social::stake_test {
         let user1_addr = signer::address_of(&user1);
         let user2_addr = signer::address_of(&user2);
         social::follow(&user1,user2_addr);
-
-
     }
 
     #[test(user1=@0xabc,user2 = @0x123)]
@@ -53,8 +51,6 @@ module social::stake_test {
         let user1_addr = signer::address_of(&user1);
         let user2_addr = signer::address_of(&user2);
         social::unfollow(&user1,user2_addr);
-
-
     }
 
     #[test(user1=@0xabc,user2 = @0x123)]
@@ -69,4 +65,4 @@ module social::stake_test {
         assert!(!social::is_following(user1_addr,user2_addr),103);
         assert!(!social::is_followed(user2_addr,user1_addr),104);
     }
-    }
+}
