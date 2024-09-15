@@ -1,5 +1,6 @@
 module social::social {
   use std::signer;
+  use std::event;
   use aptos_framework::object::{Self, Object, TransferRef, ObjectCore};
   use aptos_framework::primary_fungible_store::{Self};
   use aptos_framework::fungible_asset::{Self, FungibleAsset, Metadata, 
@@ -34,6 +35,25 @@ module social::social {
     user_address: address,
     kol_address: address,
     amount: u64,
+  }
+
+  #[event]
+  struct FollowEvent has drop, store {
+    from: address,
+    to: address,
+  }
+
+  #[event]
+  struct UnfollowEvent has drop, store {
+    from: address,
+    to: address,
+  }
+
+  #[event]
+  struct PostEvent has drop, store {
+    user_address: address,
+    post_content: String,
+    post_image: vector<String>,
   }
   
   struct ProtocolManagedFA has store, drop, key {
@@ -335,6 +355,14 @@ module social::social {
         post_image,
       },
     );
+
+    let event = PostEvent {
+      user_address: signer::address_of(account_signer),
+      post_content,
+      post_image,
+    };
+    0x1::event::emit(event);
+
   }
 
   entry public fun follow(from : &signer, to : address) acquires FollowData {
@@ -350,8 +378,15 @@ module social::social {
     let followers = smart_table::borrow_mut<address,SmartVector<address>>(&mut data.followers, to);
     assert!(!smart_vector::contains<address>(following, &to), E_ALREADY_FOLLOWED);
     assert!(!smart_vector::contains<address>(followers, &from_address), E_ALREADY_FOLLOWING);
+
     smart_vector::push_back<address>(following, to);
     smart_vector::push_back<address>(followers, signer::address_of(from));
+
+    let event = FollowEvent {
+      from: from_address,
+      to,
+    };
+    0x1::event::emit(event);
 
 
   }
@@ -369,6 +404,12 @@ module social::social {
     smart_vector::remove<address>(following, index);
     let (_, index) = smart_vector::index_of<address>(followers, &from_address);
     smart_vector::remove<address>(followers, index);
+
+    let event = UnfollowEvent {
+      from: from_address,
+      to,
+    };
+    0x1::event::emit(event);
   }
 
   #[view]
@@ -418,7 +459,7 @@ module social::social {
   public fun is_following(account: address, person : address): bool acquires FollowData {
     let data = borrow_global<FollowData>(@social);
     if (!smart_table::contains(&data.following, account)) {
-      return false;
+      return false
     };
     let following = smart_table::borrow(&data.following, account);
     smart_vector::contains(following, &person)
@@ -430,7 +471,7 @@ module social::social {
   public fun is_followed(account: address, person : address): bool acquires FollowData {
     let data = borrow_global<FollowData>(@social);
     if (!smart_table::contains(&data.followers, account)) {
-      return false;
+      return false
     };
     let followers = smart_table::borrow(&data.followers, account);
     smart_vector::contains(followers, &person)
