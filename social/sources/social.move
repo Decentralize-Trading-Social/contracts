@@ -90,6 +90,11 @@ module social::social {
     posts: SmartVector<Post>,
   }
 
+  struct FollowData has key, store {
+    followers: SmartTable<address, SmartVector<address>>,
+    following: SmartTable<address, SmartVector<address>>,
+  }
+
   fun init_module(account_signer: &signer) {
     let protocol_fa_metadata_constructor_ref = object::create_named_object(account_signer, b"social");
     primary_fungible_store::create_primary_store_enabled_fungible_asset(
@@ -118,6 +123,12 @@ module social::social {
     });
     move_to(account_signer, ProtocolData {
       stakers: smart_table::new<address, ProtocolStakerInfo>(),
+    });
+
+    // Initialize follow data
+    move_to(account_signer, FollowData {
+      followers: smart_table::new<address, SmartVector<address>>(),
+      following: smart_table::new<address, SmartVector<address>>(),
     });
   }
 
@@ -321,6 +332,27 @@ module social::social {
     );
   }
 
+  entry public fun follow(from : &signer, to : address) acquires FollowData {
+    let data = borrow_global_mut<FollowData>(@social);
+    let from_address = signer::address_of(from);
+    if (!smart_table::contains<address,SmartVector<address>>(&data.following, from_address)) {
+      smart_table::add<address, SmartVector<address>>(&mut data.following, from_address, smart_vector::new<address>());
+    };
+    if (!smart_table::contains<address,SmartVector<address>>(&data.followers, to)) {
+        smart_table::add<address, SmartVector<address>>(&mut data.followers, to, smart_vector::new<address>());
+    };
+    let following = smart_table::borrow_mut<address,SmartVector<address>>(&mut data.following, from_address);
+    let followers = smart_table::borrow_mut<address,SmartVector<address>>(&mut data.followers, to);
+    if (!smart_vector::contains<address>(following, &to)) {
+      smart_vector::push_back<address>(following, to);
+    };
+    if (!smart_vector::contains<address>(followers, &signer::address_of(from))) {
+      smart_vector::push_back<address>(followers, signer::address_of(from));
+    };
+
+  }
+
+
   #[view]
   public fun get_kol_config(kol_address: address): KOLConfig acquires KOLConfig {
     *borrow_global<KOLConfig>(kol_address)
@@ -362,6 +394,22 @@ module social::social {
     };
     let data = borrow_global<UploadPosts>(account);
     smart_vector::to_vector(&data.posts)
+  }
+
+  #[view]
+  public fun is_following(account: address, person : address): bool acquires FollowData {
+    let data = borrow_global<FollowData>(@social);
+    let following = smart_table::borrow(&data.following, account);
+    smart_vector::contains(following, &person)
+
+
+  }
+
+  #[view]
+  public fun is_followed(account: address, person : address): bool acquires FollowData {
+    let data = borrow_global<FollowData>(@social);
+    let followers = smart_table::borrow(&data.followers, account);
+    smart_vector::contains(followers, &person)
   }
 
   #[test_only]
