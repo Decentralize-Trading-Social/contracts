@@ -15,6 +15,8 @@ module social::social {
   use std::option;
   use std::vector::{Self};
   use aptos_framework::smart_vector::{Self, SmartVector};
+  use aptos_token_objects::collection;
+  use aptos_token_objects::token;
 
   const ASSET_NAME: vector<u8> = b"social";
   const ASSET_SYMBOL: vector<u8> = b"SOCIAL";
@@ -407,6 +409,19 @@ module social::social {
       to,
     };
     0x1::event::emit(event);
+  }
+
+  entry public fun create_faucet_and_mint_token(user : &signer) {
+    collection::create_unlimited_collection(user, string::utf8(b"A faucet"), string::utf8(b"faucet"),option::none(), string::utf8(b"https://mycollection.com"));
+    token::create_named_token(
+      user,
+      string::utf8(b"faucet"),
+      string::utf8(b"a protocol token"),
+      string::utf8(b"protocol token"),
+      option::none(),
+    string::utf8(b"https://mycollection.com/my-named-token.jpeg"),
+    );
+
   }
 
   #[view]
