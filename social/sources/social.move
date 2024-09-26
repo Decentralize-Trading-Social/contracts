@@ -157,14 +157,19 @@ module social::social {
     });
   }
 
-  entry public fun first_time_stake_native(account_signer: &signer, user_address: String, amount: u64, minimum_stake_config: u64) acquires ProtocolConfig, ProtocolData, ProtocolManagedFA {
+  entry public fun faucet(account_signer: &signer, amount: u64) acquires ProtocolManagedFA {
+    let protocol_fa_address = object::create_object_address(&@social, b"social");
+    primary_fungible_store::mint(&borrow_global<ProtocolManagedFA>(protocol_fa_address).mint_ref, signer::address_of(account_signer), amount);
+  }
+
+  entry public fun first_time_stake_native(account_signer: &signer, user_name: String, amount: u64, minimum_stake_config: u64) acquires ProtocolConfig, ProtocolData, ProtocolManagedFA {
     assert!(!object::object_exists<Metadata>(object::create_object_address(&signer::address_of(account_signer), b"social")), 2);
     let metadata_constructore_ref = object::create_named_object(account_signer, b"social");
     primary_fungible_store::create_primary_store_enabled_fungible_asset(
       &metadata_constructore_ref,
       option::none(),
-      user_address,
-      user_address,
+      user_name,
+      user_name,
       8,
       string::utf8(b"KOL"),
       string::utf8(b"KOL"),
