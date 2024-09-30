@@ -57,7 +57,7 @@ module social::social {
   }
 
   #[event]
-  struct ProjectCreatingEvent has drop, store {
+  struct ProjectCreated has drop, store {
     user_address: address,
     project_name: String,
     token_name: String,
@@ -133,7 +133,7 @@ module social::social {
     following: SmartTable<address, SmartVector<address>>,
   }
 
-  struct ProjectDetail has key, store, copy {
+  struct ProjectConfig has key, store, copy {
     project_name: String,
     token_name: String,
     token_symbol: String,
@@ -439,7 +439,7 @@ module social::social {
   }
 
   entry public fun create_project(user : &signer, project_name: String, token_name: String, token_symbol: String, supply: u64, soft_cap : u64, hard_cap : u64, start_time: u64, end_time: u64) {
-    move_to(user, ProjectDetail {
+    move_to(user, ProjectConfig {
         project_name,
         token_name,
         token_symbol,
@@ -449,7 +449,7 @@ module social::social {
         start_time,
         end_time,
     });
-    0x1::event::emit(ProjectCreatingEvent {
+    0x1::event::emit(ProjectCreated {
       user_address: signer::address_of(user),
       project_name,
       token_name,
