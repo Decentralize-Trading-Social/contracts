@@ -55,6 +55,19 @@ module social::social {
     post_content: String,
     post_image: vector<String>,
   }
+
+  #[event]
+  struct ProjectCreated has drop, store {
+    user_address: address,
+    project_name: String,
+    token_name: String,
+    token_symbol: String,
+    supply: u64,
+    soft_cap: u64,
+    hard_cap: u64,
+    start_time: u64,
+    end_time: u64,
+  }
   
   struct ProtocolManagedFA has store, drop, key {
     mutate_ref: FungibleMutateMetadataRef,
@@ -118,6 +131,17 @@ module social::social {
   struct FollowData has key, store {
     followers: SmartTable<address, SmartVector<address>>,
     following: SmartTable<address, SmartVector<address>>,
+  }
+
+  struct ProjectConfig has key, store, copy {
+    project_name: String,
+    token_name: String,
+    token_symbol: String,
+    supply: u64,
+    soft_cap: u64,
+    hard_cap: u64,
+    start_time: u64,
+    end_time: u64,
   }
 
   fun init_module(account_signer: &signer) {
@@ -412,6 +436,30 @@ module social::social {
       to,
     };
     0x1::event::emit(event);
+  }
+
+  entry public fun create_project(user : &signer, project_name: String, token_name: String, token_symbol: String, supply: u64, soft_cap : u64, hard_cap : u64, start_time: u64, end_time: u64) {
+    move_to(user, ProjectConfig {
+        project_name,
+        token_name,
+        token_symbol,
+        supply,
+        soft_cap,
+        hard_cap,
+        start_time,
+        end_time,
+    });
+    0x1::event::emit(ProjectCreated {
+      user_address: signer::address_of(user),
+      project_name,
+      token_name,
+      token_symbol,
+      supply,
+      soft_cap,
+      hard_cap,
+      start_time,
+      end_time,
+    });
   }
 
   #[view]
