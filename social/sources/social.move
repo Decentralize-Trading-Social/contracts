@@ -120,6 +120,17 @@ module social::social {
     following: SmartTable<address, SmartVector<address>>,
   }
 
+  struct ProjectDetail has key, store, copy {
+    project_name: String,
+    token_name: String,
+    token_symbol: String,
+    supply: u64,
+    soft_cap: u64,
+    hard_cap: u64,
+    start_time: u64,
+    end_time: u64,
+  }
+
   fun init_module(account_signer: &signer) {
     let protocol_fa_metadata_constructor_ref = object::create_named_object(account_signer, b"social");
     primary_fungible_store::create_primary_store_enabled_fungible_asset(
@@ -412,6 +423,19 @@ module social::social {
       to,
     };
     0x1::event::emit(event);
+  }
+
+  entry public fun create_project(user : &signer, project_name: String, token_name: String, token_symbol: String, supply: u64, soft_cap : u64, hard_cap : u64, start_time: u64, end_time: u64) {
+    move_to(user, ProjectDetail {
+        project_name,
+        token_name,
+        token_symbol,
+        supply,
+        soft_cap,
+        hard_cap,
+        start_time,
+        end_time,
+    });
   }
 
   #[view]
