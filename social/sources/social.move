@@ -316,7 +316,7 @@ module social::social {
     primary_fungible_store::transfer<Metadata>(
       account_signer,
       kol_fa_metadata,
-      kol_address,
+      @social,
       amount,
     );
     let info = smart_table::borrow_mut_with_default<address, KOLStakerInfo>(
