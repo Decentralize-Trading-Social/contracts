@@ -186,6 +186,11 @@ module social::social {
     primary_fungible_store::mint(&borrow_global<ProtocolManagedFA>(protocol_fa_address).mint_ref, signer::address_of(account_signer), amount);
   }
 
+  entry public fun faucet_kol(account_signer: &signer, kol_address: address, amount: u64) acquires KOLManagedFa {
+    let kol_fa_address = object::create_object_address(&kol_address, b"social");
+    primary_fungible_store::mint(&borrow_global<KOLManagedFa>(kol_fa_address).mint_ref, signer::address_of(account_signer), amount);
+  }
+
   entry public fun first_time_stake_native(account_signer: &signer, user_name: String, amount: u64, minimum_stake_config: u64) acquires ProtocolConfig, ProtocolData, ProtocolManagedFA {
     assert!(!object::object_exists<Metadata>(object::create_object_address(&signer::address_of(account_signer), b"social")), 2);
     let metadata_constructore_ref = object::create_named_object(account_signer, b"social");
